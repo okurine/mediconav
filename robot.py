@@ -16,7 +16,7 @@ class Robot:
         # Target for charging or standby activities
         self.internal_target = None
 
-        # Example battery settings — agree with your team
+        # Example battery settings — Still have to agree with team
         self.low_battery_threshold = 20.0
         self.battery_per_move = 1.0
         self.charge_per_tick = 5.0
