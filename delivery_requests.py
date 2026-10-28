@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Tuple
 
-from temp_layout import GRID_ROWS, GRID_COLS
+from environment import ROWS as GRID_ROWS, COLS as GRID_COLS
 
 # A location is a (row, column) pair, e.g. (3, 7)
 Location = Tuple[int, int]
@@ -44,7 +44,7 @@ class DeliveryRequest:
     destination: Location
     arrival_time: int
     urgency: Urgency
-    task_type: str = "medicine"
+    task_type: str = "medication"
     status: RequestStatus = RequestStatus.PENDING
     assigned_robot_id: Optional[int] = None
 
