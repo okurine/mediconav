@@ -7,8 +7,23 @@ COLS = 20
 EMPTY_FLOOR = 0
 WALL = 1
 BED = 2
+# Coordinates are (row, col), with (0, 0) at the top-left
+# Robots can walk on/through:
+# '.' = Open floor
+# 'I' = ICU patient delivery location
+# 'W' = Ward patient delivery location
+# 'E' = Emergency patient delivery location
+# 'P' = Pharmacy medication pickup location
+# 'M' = Medical supply pickup location
+# 'L' = Lab dropoff location
+# 'N' = Nurse's station
+# 'C' = Robot charging station
 
-# 'X' = wall, '.' = open floor, lowercase = bed, uppercase = interactable task location
+# Robots can NOT walk on/through:
+# 'X' = Wall
+# 'i' = ICU patient bed
+# 'w' = Ward patient bed
+# 'e' = Emergency patient bed
 LAYOUT = [
     "XXXXXXXXXXXXXXXXXXXX",
     "Xi..i..X.C..X.w.w.wX",
