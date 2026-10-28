@@ -1,3 +1,4 @@
+
 class Robot:
     def __init__(self, robot_id, position):
         # Basic information
@@ -253,62 +254,36 @@ def create_robots(start_positions):
 
 # Independent demonstration using sample coordinates and paths.
 if __name__ == "__main__":
-    start_positions = [
-        (0, 0),
-        (0, 1),
-        (0, 2),
-        (0, 3),
-        (0, 4),
-        (0, 5),
-    ]
+    from environment import LAYOUT, validate_layout, build_grid
 
-    robots = create_robots(start_positions)
+    validate_layout(LAYOUT)
+    grid, locations = build_grid(LAYOUT)
+
+    # Start all six robots at charging locations.
+    robots = create_robots(locations["C"])
+
+    # Select just the first robot for this delivery.
     robot = robots[0]
 
     request = {
         "request_id": "REQ-001",
-        "task_type": "emergency_medication",
-        "pickup": (0, 2),
-        "destination": (1, 2),
-        "urgency": "red",
+        "task_type": "lab_sample",
+        "pickup": locations["I"][0],
+        "destination": locations["L"][0],
+        "urgency": "yellow",
         "arrival_time": 0,
     }
 
-    # The dispatcher normally makes this call.
+    print("Before assignment:")
+    print(robot.get_state())
+
     robot.receive_assignment(request)
 
-    # A* normally supplies this route.
-    robot.set_path([(0, 0), (0, 1), (0, 2)])
+    print("\nAfter assignment:")
+    print(robot.get_state())
 
-    print(robot.step())  # None: moves to (0, 1)
-    print(robot.step())  # picked_up
-
-    # After pickup, supply the route to the delivery destination.
-    robot.set_path([(0, 2), (1, 2)])
-
-    print(robot.step())  # delivered
-
-    # Demonstrate returning to standby.
-    robot.send_to_standby((0, 0))
-    robot.set_path([(1, 2), (1, 1), (1, 0), (0, 0)])
-
-    while robot.task_phase == "to_standby":
-        print(robot.step())
-
-    # Demonstrate a low-battery situation.
-    robot.battery = 20.0
-
-    robot.send_to_charger((1, 0))
-    robot.set_path([(0, 0), (1, 0)])
-
-    print(robot.step())  # reached_charger
-
-    while robot.status == "charging":
-        print(robot.step())
-
-    # Print all six robot states.
-    for robot in robots:
-        print(robot.get_state())
-
-
-# Have to still discuss charging locations
+    print("\nDelivery details:")
+    print("Starting position:", robot.position)
+    print("Pickup:", request["pickup"])
+    print("Destination:", request["destination"])
+    print("Current target:", robot.get_target())
