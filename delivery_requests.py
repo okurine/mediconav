@@ -73,7 +73,7 @@ class DeliveryRequest:
         }
 
 
-    # Pending requests waiting for a robot.
+# Pending requests waiting for a robot.
 # Order: red before yellow before green.
 # Same urgency: earliest arrival first (FIFO)
 class RequestQueue:
@@ -121,3 +121,25 @@ class RequestQueue:
         for entry in self._heap:
             counts[entry[-1].urgency.value] += 1
         return counts
+
+# Holds generated requests and releases them when their arrival time is reached
+class ArrivalSchedule:
+
+    def __init__(self, requests):
+        self._upcoming = sorted(requests, key=lambda r: r.arrival_time)
+        self._next_index = 0
+
+    def release(self, current_time):
+        # Return all requests whose arrival_time <= current_time that haven't been released yet
+        arrived = []
+        while (
+            self._next_index < len(self._upcoming)
+            and self._upcoming[self._next_index].arrival_time <= current_time
+        ):
+            arrived.append(self._upcoming[self._next_index])
+            self._next_index += 1
+        return arrived
+
+    def remaining(self):
+        # Number of requests that haven't arrived yet
+        return len(self._upcoming) - self._next_index

@@ -4,8 +4,8 @@
 import random
 from dataclasses import dataclass
 
-from delivery_requests import DeliveryRequest, Urgency
-from temp_layout import TEMP_PICKUP_LOCATIONS, TEMP_DESTINATIONS, TEMP_TASK_TYPES
+from delivery_requests import DeliveryRequest, Urgency, RequestQueue, ArrivalSchedule
+from temp_layout import LOCATION_CELLS, REQUEST_TYPES
 
 
 @dataclass(frozen=True)
@@ -42,35 +42,34 @@ SCENARIOS = {
 def generate_requests(
     scenario,
     seed=42,
-    pickups=TEMP_PICKUP_LOCATIONS,
-    destinations=TEMP_DESTINATIONS,
-    task_types=TEMP_TASK_TYPES,
+    location_cells=LOCATION_CELLS,
+    request_types=REQUEST_TYPES,
 ):
-    #Generate a list of DeliveryRequests for one scenario, sorted by arrival time."""
+    #Generate a list of DeliveryRequests for one scenario, sorted by arrival time
     rng = random.Random(seed)
 
     urgencies = list(scenario.urgency_weights.keys())
     weights = list(scenario.urgency_weights.values())
-    pickup_cells = list(pickups.values())
-    destination_cells = list(destinations.values())
+    type_names = list(request_types.keys())
 
     requests = []
     current_time = 0.0
 
     for i in range(scenario.num_requests):
-        # Random gap until the next request (averages scenario.mean_gap)
         current_time += rng.expovariate(1.0 / scenario.mean_gap)
         arrival_time = int(round(current_time))
 
         urgency = rng.choices(urgencies, weights=weights, k=1)[0]
-        pickup = rng.choice(pickup_cells)
 
-        # Re-pick if destination matches pickup (possible once real locations overlap)
-        destination = rng.choice(destination_cells)
-        while destination == pickup:
-            destination = rng.choice(destination_cells)
+        # The task type decides which letters are allowed for pickup and destination
+        task_type = rng.choice(type_names)
+        rule = request_types[task_type]
+        pickup_letter = rng.choice(rule["pickups"])
+        destination_letter = rng.choice(rule["destinations"])
 
-        task_type = rng.choice(task_types)
+        # A letter may cover several cells; pick one
+        pickup = rng.choice(location_cells[pickup_letter])
+        destination = rng.choice(location_cells[destination_letter])
 
         requests.append(
             DeliveryRequest(
@@ -93,12 +92,11 @@ def summarize(requests):
         counts[r.urgency.value] += 1
     return counts
 
-
-from data_generator import SCENARIOS, generate_requests, summarize
-
-reqs = generate_requests(SCENARIOS["normal"], seed=42)
-for r in reqs[:5]:
-    print(r.request_id, r.arrival_time, r.urgency.value, r.pickup, "->", r.destination)
-
-print(summarize(reqs))
-print(summarize(generate_requests(SCENARIOS["emergency_heavy"], seed=42)))
+if __name__ == "__main__":
+    for name, scenario in SCENARIOS.items():
+        reqs = generate_requests(scenario, seed=42)
+        print(f"\n=== {name}: {len(reqs)} requests ===")
+        print(f"Urgency counts: {summarize(reqs)}")
+        for r in reqs[:5]:
+            print(r.request_id, f"t={r.arrival_time:>3}", r.urgency.value.ljust(6),
+                  r.task_type.ljust(17), r.pickup, "->", r.destination)
