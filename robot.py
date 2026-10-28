@@ -266,7 +266,7 @@ if __name__ == "__main__":
     robot = robots[0]
 
     request = {
-        "request_id": 1,
+        "request_id": "REQ-001",
         "task_type": "emergency_medication",
         "pickup": (0, 2),
         "destination": (1, 2),
@@ -309,3 +309,6 @@ if __name__ == "__main__":
     # Print all six robot states.
     for robot in robots:
         print(robot.get_state())
+
+
+# Have to still discuss charging locations
