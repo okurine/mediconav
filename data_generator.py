@@ -5,7 +5,18 @@ import random
 from dataclasses import dataclass
 
 from delivery_requests import DeliveryRequest, Urgency, RequestQueue, ArrivalSchedule
-from temp_layout import LOCATION_CELLS, REQUEST_TYPES
+from environment import LAYOUT, build_grid
+
+# Task locations come straight from the real map
+_, _cells = build_grid(LAYOUT)
+LOCATION_CELLS = {letter: _cells[letter] for letter in "PMEIWLN"}
+
+# Which letters each task type may start from and end at
+REQUEST_TYPES = {
+    "medication":       {"pickups": ["P"],           "destinations": ["E", "I", "W", "N"]},
+    "medical_supplies": {"pickups": ["M"],           "destinations": ["E", "I", "W", "N"]},
+    "lab_sample":       {"pickups": ["E", "I", "W"], "destinations": ["L"]},
+}
 
 
 @dataclass(frozen=True)
