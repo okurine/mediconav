@@ -4,7 +4,7 @@
 import random
 from dataclasses import dataclass
 
-from delivery_requests import DeliveryRequest, Urgency, RequestQueue, ArrivalSchedule
+from delivery_requests import DeliveryRequest, Urgency, RequestQueue, ArrivalSchedule, TASK_TYPES
 from environment import LAYOUT, build_grid
 
 # Task locations come straight from the real map
@@ -18,6 +18,7 @@ REQUEST_TYPES = {
     "lab_sample":       {"pickups": ["E", "I", "W"], "destinations": ["L"]},
 }
 
+assert set(REQUEST_TYPES) == set(TASK_TYPES), "REQUEST_TYPES and TASK_TYPES are out of sync"
 
 @dataclass(frozen=True)
 class Scenario:
@@ -48,6 +49,9 @@ SCENARIOS = {
         urgency_weights={Urgency.RED: 0.60, Urgency.YELLOW: 0.30, Urgency.GREEN: 0.10},
     ),
 }
+
+TRAIN_SEEDS = list(range(1, 51))     # Q-learning learns on these days
+TEST_SEEDS = list(range(100, 121))   # both dispatchers are scored on these unseen days
 
 
 def generate_requests(
@@ -102,12 +106,3 @@ def summarize(requests):
     for r in requests:
         counts[r.urgency.value] += 1
     return counts
-
-if __name__ == "__main__":
-    for name, scenario in SCENARIOS.items():
-        reqs = generate_requests(scenario, seed=42)
-        print(f"\n=== {name}: {len(reqs)} requests ===")
-        print(f"Urgency counts: {summarize(reqs)}")
-        for r in reqs[:5]:
-            print(r.request_id, f"t={r.arrival_time:>3}", r.urgency.value.ljust(6),
-                  r.task_type.ljust(17), r.pickup, "->", r.destination)

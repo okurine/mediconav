@@ -30,6 +30,8 @@ class RequestStatus(Enum):
     ASSIGNED = "assigned"
     COMPLETED = "completed"
 
+TASK_TYPES = ("medication", "medical_supplies", "lab_sample")
+
 
 def is_in_bounds(loc: Location) -> bool:
     # True if loc is a valid (row, col) inside the hospital grid.
@@ -60,6 +62,8 @@ class DeliveryRequest:
             raise ValueError(f"{self.request_id}: arrival_time cannot be negative")
         if not isinstance(self.urgency, Urgency):
             raise ValueError(f"{self.request_id}: urgency must be an Urgency value")
+        if self.task_type not in TASK_TYPES:
+            raise ValueError(f"{self.request_id}: unknown task_type '{self.task_type}'")
 
     def to_dict(self) -> dict:
         # Convert to the dictionary format robots.py expects.
@@ -77,10 +81,11 @@ class DeliveryRequest:
 # Order: red before yellow before green.
 # Same urgency: earliest arrival first (FIFO)
 class RequestQueue:
-    def __init__(self):
+    def __init__(self, aging_rate=0.0):
         self._heap = []
         self._ids = set()
         self._counter = itertools.count()
+        self.aging_rate = aging_rate   # priority points gained per tick of waiting
 
     def add(self, request):
         if request.status != RequestStatus.PENDING:
@@ -97,24 +102,35 @@ class RequestQueue:
         heapq.heappush(self._heap, entry)
         self._ids.add(request.request_id)
 
-    def pop_next(self):
-        # Remove and return the highest-priority request, or None if empty
+        def _ordered(self, current_time):
+        """Waiting entries, best first, with aging applied."""
+        if self.aging_rate > 0 and current_time is None:
+            raise ValueError("current_time is required when aging is on")
+
+        def key(entry):
+            base, arrival, counter, _ = entry
+            waited = max(0, (current_time or 0) - arrival)
+            return (base - self.aging_rate * waited, arrival, counter)
+
+        return sorted(self._heap, key=key)
+
+    def pop_next(self, current_time=None):
         if not self._heap:
             return None
-        request = heapq.heappop(self._heap)[-1]
-        self._ids.remove(request.request_id)
-        return request
+        entry = self._ordered(current_time)[0]
+        self._heap.remove(entry)
+        heapq.heapify(self._heap)
+        self._ids.remove(entry[-1].request_id)
+        return entry[-1]
 
-    def peek_next(self):
-        # Return the highest-priority request without removing it, or None
-        return self._heap[0][-1] if self._heap else None
+    def peek_next(self, current_time=None):
+        return self._ordered(current_time)[0][-1] if self._heap else None
+
+    def pending_requests(self, current_time=None):
+        return [entry[-1] for entry in self._ordered(current_time)]
 
     def __len__(self):
         return len(self._heap)
-
-    def pending_requests(self):
-        # All waiting requests in priority order (for display or the dispatcher)
-        return [entry[-1] for entry in sorted(self._heap)]
 
     def count_by_urgency(self):
         counts = {u.value: 0 for u in Urgency}
