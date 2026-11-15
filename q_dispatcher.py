@@ -41,6 +41,8 @@ class QDispatcher:
         self._pending = None          # last decision, waiting for the next state
         self.decisions = 0
         self.real_choices = 0         # decisions with 2+ eligible robots
+        self.total_reward = 0.0       # sum of rewards this day (for the learning curve)
+        self.deviations = 0           # times the agent picked a non-nearest robot
 
     def choose_robot(self, request, robots, queue_behind=0, now=0):
         candidates = ranked_candidates(request, robots)
@@ -66,6 +68,9 @@ class QDispatcher:
 
         delivery_len = path_length(tuple(request.pickup), tuple(request.destination))
         reward = compute_reward(urgency, now - request.arrival_time, distance + delivery_len)
+        self.total_reward += reward
+        if action != 0:
+            self.deviations += 1
         self._pending = (state, action, reward)
         return robot
 
