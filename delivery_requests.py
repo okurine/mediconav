@@ -102,7 +102,7 @@ class RequestQueue:
         heapq.heappush(self._heap, entry)
         self._ids.add(request.request_id)
 
-        def _ordered(self, current_time):
+    def _ordered(self, current_time):
         """Waiting entries, best first, with aging applied."""
         if self.aging_rate > 0 and current_time is None:
             raise ValueError("current_time is required when aging is on")
