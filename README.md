@@ -38,3 +38,9 @@ medications, supplies, and lab samples across a single-floor hospital grid.
 - Each request has an ID, pickup, destination, arrival time, urgency, and task type
 - Invalid requests are rejected when created: off-grid cells, same pickup and
   destination, negative arrival time, or an
+
+### Baseline Dispatcher (`dispatcher.py`)
+- Selects the nearest eligible robot; breaks ties by lower robot ID.
+- Checks battery for pickup, delivery, and reaching a charger, plus a 5% reserve.
+- Sends idle robots to charge when needed.
+- Run seven independent tests: `python dispatcher.py`.
