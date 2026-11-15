@@ -77,5 +77,4 @@ class QAgent:
         values[action] += self.alpha * (reward + self.gamma * best_next - values[action])
 
     def end_episode(self):
-        """Call once per simulated day: explore a little less next time."""
         self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
