@@ -4,6 +4,7 @@ Pure Python: it does not depend on the simulation, so it can be tested on its ow
 """
 
 import random
+import json
 
 # Action 0 = nearest free robot, action 1 = second-nearest free robot
 ACTIONS = ["nearest", "second_nearest"]
@@ -77,5 +78,14 @@ class QAgent:
         values[action] += self.alpha * (reward + self.gamma * best_next - values[action])
 
     def end_episode(self):
-        """Call once per simulated day: explore a little less next time."""
         self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
+
+    def save(self, path):
+        """Write the Q-table to a JSON file."""
+        with open(path, "w") as f:
+            json.dump({"|".join(state): values for state, values in self.q.items()}, f, indent=2)
+
+    def load(self, path):
+        """Read a Q-table written by save()."""
+        with open(path) as f:
+            self.q = {tuple(key.split("|")): values for key, values in json.load(f).items()}
