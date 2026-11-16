@@ -34,7 +34,7 @@ def heuristic(cell, goal):
 # Find shortest path from start to goal using A* search
 # Args: grid (array from build_grid), start (row, col), goal (row, col)
 # Returns: list of (row, col) cells from start to goal (includes both),
-#          or None if no route exists
+# or None if no route exists
 def find_path(grid, start, goal):
     frontier = []
     heapq.heappush(frontier, (heuristic(start, goal), 0, start, [start]))
@@ -79,7 +79,7 @@ def check_reachability():
             if b not in DISTANCES[a]:
                 raise ValueError(f"Task {b} is unreachable from Task {a}.")
 
-# precompute distances from every task location once
+# Precompute distances from every task location once
 # so path_length can have a fast lookup instead of new search
 for coords in LOCATIONS.values():
     for cds in coords:
